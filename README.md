@@ -10,19 +10,21 @@ Proyecto final del curso de Data Analytics de Coderhouse.
 | --- | --- | --- |
 | 3 | Checkpoint: Script SQL de Ingeniería de Datos | [`modulo-3/ventas_tech_db.sql`](modulo-3/ventas_tech_db.sql) |
 | 4 | Pre-entrega: Consultas SQL de negocio | [`modulo-4/m4_consultas_negocio.sql`](modulo-4/m4_consultas_negocio.sql) |
+| 5 | Pre-entrega: Consultas con JOINs para el proyecto | [`modulo-5/m5_consultas_joins.sql`](modulo-5/m5_consultas_joins.sql) |
 
 ## Módulo 3 — `Ventas_Tech_DB`
 
 Script de SQL Server que crea la base `Ventas_Tech_DB` del caso TechStore:
 
 ```
-categorias (1) ──── (N) productos (1) ──── (N) ventas (N) ──── (1) clientes
+categorias (1) ──── (N) productos (1) ──── (N) ventas (N) ──── (1) clientes (N) ──── (1) regiones
 ```
 
-- Tres tablas de dimensión (`categorias`, `clientes`, `productos`) y una de hechos (`ventas`).
+- Cuatro tablas de dimensión (`categorias`, `regiones`, `clientes`, `productos`) y una de hechos (`ventas`).
+- En M5 se sumó la tabla `regiones`, un cliente sin compras y un producto sin ventas.
 - El script tiene cuatro secciones: **DROP**, **CREATE**, **INSERT** y **VALIDACIÓN**.
 - Es repetible: crea la base solo si no existe y borra las tablas en orden inverso a las dependencias.
-- Carga 25 registros. Las consultas de validación devuelven 4, 5, 6 y 10 filas.
+- Carga 32 registros. Las consultas de validación devuelven 4, 5, 6, 7 y 10 filas.
 
 ### Cómo correrlo
 
@@ -37,5 +39,14 @@ Cuatro consultas sobre la tabla `ventas` de `Ventas_Tech_DB`, más tres hallazgo
 2. Top 5 de productos por facturación, con unidades y % del total.
 3. Clientes recurrentes (más de un pedido) y su gasto total.
 4. Facturación de cada mes frente al promedio mensual.
+
+Se corre en SSMS después del script del módulo 3.
+
+## Módulo 5 — Consultas con JOINs
+
+1. Vista base para Power BI (INNER JOIN): cada venta con cliente, ciudad, región, producto y categoría.
+2. Clientes sin compras (LEFT JOIN + `IS NULL`).
+3. Productos sin ventas (LEFT JOIN + `IS NULL`).
+4. Consolidado por período con UNION ALL y una columna creada como texto fijo.
 
 Se corre en SSMS después del script del módulo 3.

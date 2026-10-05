@@ -113,8 +113,8 @@ GO
 --    Inalámbrico) es el que más unidades vendió (13) pero aporta solo
 --    $364, el 5,65%: vender muchas unidades no es lo mismo que facturar.
 --
--- 2. Los 5 clientes compraron exactamente 2 veces, así que todos salen
---    como recurrentes y la consulta 3 no los distingue. Lo que sí los
+-- 2. Los 5 clientes que compraron lo hicieron exactamente 2 veces, así
+--    que todos salen como recurrentes y la consulta 3 no los distingue. Lo que sí los
 --    separa es el gasto: el cliente 1 gastó $2.640 (41% del total) y
 --    junto con el cliente 5 ($2.100) explican el 73,6%. Los otros tres
 --    gastaron entre $510 y $674 cada uno. Hay dependencia de pocos

@@ -6,7 +6,12 @@
 -- Alumno: Hendris Bellorín
 --
 -- Modelo:
---   categorias (1) ──── (N) productos (1) ──── (N) ventas (N) ──── (1) clientes
+--   categorias (1) ──── (N) productos (1) ──── (N) ventas (N) ──── (1) clientes (N) ──── (1) regiones
+--
+-- Ampliado en M5: se agregó la tabla regiones (con su FK en clientes),
+-- un cliente que todavía no compró (id 6) y un producto sin ventas
+-- (id 7). Hacían falta para tener una dimensión geográfica que agrupe
+-- ciudades y para que las consultas con LEFT JOIN de M5 encuentren casos.
 --
 -- El script es repetible: se puede correr completo las veces que haga
 -- falta. Crea la base solo si no existe, y borra las tablas en orden
@@ -26,18 +31,20 @@ GO
 -- =====================================================================
 -- === SECCIÓN 1: DROP ===
 -- Orden inverso a las dependencias: primero las tablas que tienen FK.
--- ventas apunta a productos y clientes; productos apunta a categorias.
+-- ventas apunta a productos y clientes; productos apunta a categorias;
+-- clientes apunta a regiones.
 -- =====================================================================
 DROP TABLE IF EXISTS ventas;
 DROP TABLE IF EXISTS productos;
 DROP TABLE IF EXISTS clientes;
+DROP TABLE IF EXISTS regiones;
 DROP TABLE IF EXISTS categorias;
 GO
 
 
 -- =====================================================================
 -- === SECCIÓN 2: CREATE ===
--- Primero las dimensiones (categorias, clientes, productos) y al final
+-- Primero las dimensiones (categorias, regiones, clientes, productos) y al final
 -- la tabla de hechos (ventas), para que cada FK tenga a dónde apuntar.
 -- Los importes van en DECIMAL(10,2), nunca FLOAT.
 -- =====================================================================
@@ -50,15 +57,27 @@ CREATE TABLE categorias (
     CONSTRAINT PK_categorias PRIMARY KEY (id_categoria)
 );
 
+-- Dimensión: regiones (agrupa las ciudades de los clientes)
+CREATE TABLE regiones (
+    id_region      INT          NOT NULL,
+    nombre_region  VARCHAR(50)  NOT NULL,
+    CONSTRAINT PK_regiones PRIMARY KEY (id_region)
+);
+
 -- Dimensión: clientes
+-- id_region es NOT NULL a propósito: un cliente sin región desaparecería
+-- de cualquier INNER JOIN con regiones, y con él todas sus ventas.
 CREATE TABLE clientes (
     id_cliente      INT           NOT NULL,
     nombre          VARCHAR(100)  NOT NULL,
     email           VARCHAR(100)  NULL,
     ciudad          VARCHAR(50)   NULL,
     fecha_registro  DATE          NOT NULL,
+    id_region       INT           NOT NULL,
     CONSTRAINT PK_clientes PRIMARY KEY (id_cliente),
-    CONSTRAINT UQ_clientes_email UNIQUE (email)
+    CONSTRAINT UQ_clientes_email UNIQUE (email),
+    CONSTRAINT FK_clientes_regiones
+        FOREIGN KEY (id_region) REFERENCES regiones (id_region)
 );
 
 -- Dimensión: productos (la categoría se guarda como FK, no como texto)
@@ -93,8 +112,8 @@ GO
 
 -- =====================================================================
 -- === SECCIÓN 3: INSERT ===
--- 25 registros en total. Mismo orden lógico que el CREATE: primero
--- categorias y clientes, después productos y al final ventas.
+-- 32 registros en total. Mismo orden lógico que el CREATE: primero
+-- categorias, regiones y clientes, después productos y al final ventas.
 -- =====================================================================
 
 -- categorias — 4 registros
@@ -104,22 +123,33 @@ INSERT INTO categorias (id_categoria, nombre_categoria, descripcion) VALUES
   (3, 'Audio',          'Auriculares y parlantes'),
   (4, 'Almacenamiento', 'Discos y memorias');
 
--- clientes — 5 registros
-INSERT INTO clientes (id_cliente, nombre, email, ciudad, fecha_registro) VALUES
-  (1, 'María López',  'maria@mail.com',  'Buenos Aires', '2024-01-05'),
-  (2, 'Carlos Ruiz',  'carlos@mail.com', 'Córdoba',      '2024-01-10'),
-  (3, 'Ana Gómez',    'ana@mail.com',    'Rosario',      '2024-02-01'),
-  (4, 'Pedro Sanz',   'pedro@mail.com',  'Mendoza',      '2024-02-15'),
-  (5, 'Laura Torres', 'laura@mail.com',  'Tucumán',      '2024-03-01');
+-- regiones — 5 registros (agregado en M5)
+INSERT INTO regiones (id_region, nombre_region) VALUES
+  (1, 'Centro'),
+  (2, 'Litoral'),
+  (3, 'Cuyo'),
+  (4, 'Norte'),
+  (5, 'Sur');
 
--- productos — 6 registros
+-- clientes — 6 registros (id_region y el cliente 6 se agregaron en M5;
+-- el cliente 6 se registró pero todavía no compró)
+INSERT INTO clientes (id_cliente, nombre, email, ciudad, fecha_registro, id_region) VALUES
+  (1, 'María López',  'maria@mail.com',  'Buenos Aires', '2024-01-05', 1),
+  (2, 'Carlos Ruiz',  'carlos@mail.com', 'Córdoba',      '2024-01-10', 1),
+  (3, 'Ana Gómez',    'ana@mail.com',    'Rosario',      '2024-02-01', 2),
+  (4, 'Pedro Sanz',   'pedro@mail.com',  'Mendoza',      '2024-02-15', 3),
+  (5, 'Laura Torres', 'laura@mail.com',  'Tucumán',      '2024-03-01', 4),
+  (6, 'Jorge Díaz',   'jorge@mail.com',  'Neuquén',      '2024-03-10', 5);
+
+-- productos — 7 registros (el producto 7 se agregó en M5 y no tiene ventas)
 INSERT INTO productos (id_producto, nombre_producto, id_categoria, precio, stock, activo) VALUES
   (1, 'Laptop Pro 15',      1, 1200.00, 15, 1),
   (2, 'Mouse Inalámbrico',  2,   28.00, 80, 1),
   (3, 'Monitor 4K 27',      1,  450.00, 12, 1),
   (4, 'Auriculares BT Pro', 3,  120.00, 35, 1),
   (5, 'SSD Externo 1TB',    4,  130.00, 18, 1),
-  (6, 'Teclado Mecánico',   2,   95.00, 40, 1);
+  (6, 'Teclado Mecánico',   2,   95.00, 40, 1),
+  (7, 'Webcam HD 1080p',    2,   65.00, 25, 1);
 
 -- ventas — 10 registros
 INSERT INTO ventas (id_venta, id_cliente, id_producto, cantidad, precio_unitario, fecha_venta) VALUES
@@ -141,7 +171,8 @@ GO
 -- Cada consulta tiene que devolver la cantidad de filas indicada.
 -- =====================================================================
 SELECT * FROM categorias;   -- esperado: 4 filas
-SELECT * FROM clientes;     -- esperado: 5 filas
-SELECT * FROM productos;    -- esperado: 6 filas
+SELECT * FROM regiones;     -- esperado: 5 filas
+SELECT * FROM clientes;     -- esperado: 6 filas
+SELECT * FROM productos;    -- esperado: 7 filas
 SELECT * FROM ventas;       -- esperado: 10 filas
 GO
