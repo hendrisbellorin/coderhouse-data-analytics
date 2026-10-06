@@ -11,6 +11,8 @@ Proyecto final del curso de Data Analytics de Coderhouse.
 | 3 | Checkpoint: Script SQL de Ingeniería de Datos | [`modulo-3/ventas_tech_db.sql`](modulo-3/ventas_tech_db.sql) |
 | 4 | Pre-entrega: Consultas SQL de negocio | [`modulo-4/m4_consultas_negocio.sql`](modulo-4/m4_consultas_negocio.sql) |
 | 5 | Pre-entrega: Consultas con JOINs para el proyecto | [`modulo-5/m5_consultas_joins.sql`](modulo-5/m5_consultas_joins.sql) |
+| 6 | Checkpoint: Pipeline ETL con Power Query y M | [`modulo-6/power-query/`](modulo-6/power-query/) |
+| 8 | Checkpoint 2: Modelo de datos y medidas DAX | [`modulo-8/dax/Modelo_M8.dax`](modulo-8/dax/Modelo_M8.dax) |
 
 ## Módulo 3 — `Ventas_Tech_DB`
 
@@ -50,3 +52,9 @@ Se corre en SSMS después del script del módulo 3.
 4. Consolidado por período con UNION ALL y una columna creada como texto fijo.
 
 Se corre en SSMS después del script del módulo 3.
+
+## Módulos 6 y 8 — Power BI
+
+- `modulo-6/power-query/`: código M de las consultas `Dim_Clientes`, `Dim_Productos`, `Dim_Categorias` y `Fact_Ventas`, y el parámetro `RutaExcel`.
+- `modulo-8/dax/Modelo_M8.dax`: tabla calendario y las cinco medidas core.
+- [`GUIA_WINDOWS_M6_M8.md`](GUIA_WINDOWS_M6_M8.md): cómo armar los dos `.pbix` en una sola sesión de Power BI Desktop.

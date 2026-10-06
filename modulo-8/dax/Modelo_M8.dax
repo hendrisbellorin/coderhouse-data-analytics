@@ -1,0 +1,87 @@
+// =====================================================================
+// M8 — Modelo de datos y medidas core (Checkpoint 2)
+// Se crea en este orden, sobre el .pbix de M6.
+// =====================================================================
+
+
+// ---------------------------------------------------------------------
+// 1. TABLA CALENDARIO  (Inicio > Nueva tabla)
+// ---------------------------------------------------------------------
+// CALENDAR genera una fecha por día, sin huecos, desde la primera venta
+// (10/01/2023) hasta la última (22/07/2024). Que no tenga huecos es lo
+// que permite marcarla como tabla de fechas.
+// Que termine en la última venta tiene un efecto buscado: el año 2024
+// abarca solo hasta el 22/07, así que en el total anual Ventas LY compara
+// contra el mismo tramo de 2023 y no contra el año completo.
+Dim_Fechas =
+CALENDAR (
+    MIN ( Fact_Ventas[fecha_venta] ),
+    MAX ( Fact_Ventas[fecha_venta] )
+)
+
+// Columnas calculadas (con Dim_Fechas seleccionada: Herramientas de tabla > Nueva columna)
+Año = YEAR ( Dim_Fechas[Date] )
+
+Mes Número = MONTH ( Dim_Fechas[Date] )
+
+// Ordenar por columna: Mes Número. Si no, los meses salen alfabéticos
+// (abril, agosto, diciembre…) en la matriz de validación.
+Mes Nombre = FORMAT ( Dim_Fechas[Date], "MMMM" )
+
+Trimestre = "T" & QUARTER ( Dim_Fechas[Date] )
+
+Semana = WEEKNUM ( Dim_Fechas[Date] )
+
+// Después: clic derecho en Dim_Fechas > Marcar como tabla de fechas > Date.
+
+
+// ---------------------------------------------------------------------
+// 2. MEDIDAS  (clic derecho en _Medidas > Nueva medida)
+// ---------------------------------------------------------------------
+
+// Medida 1 — Agregación base. Todas las demás se apoyan en esta: si
+// mañana cambia la definición de venta, se corrige en un solo lugar.
+// Formato: Moneda, 2 decimales.
+Total Ventas =
+SUM ( Fact_Ventas[total_venta] )
+
+// Medida 2 — CALCULATE con filtro. Reemplaza el filtro de canal que
+// venga del reporte por "Online"; el resto de los filtros (fecha,
+// producto, cliente) se respeta.
+Ventas Online =
+CALCULATE (
+    [Total Ventas],
+    Fact_Ventas[canal] = "Online"
+)
+
+// Medida 3 — Inteligencia de tiempo. Acumula desde el 1/1 del año del
+// contexto hasta la última fecha visible; vuelve a cero cada enero.
+// Necesita que Dim_Fechas esté marcada como tabla de fechas.
+Ventas YTD =
+TOTALYTD (
+    [Total Ventas],
+    Dim_Fechas[Date]
+)
+
+// Medida 4 — Mismo período del año anterior. Corre las fechas del
+// contexto un año hacia atrás. En 2023 da BLANK porque el calendario
+// no tiene 2022.
+Ventas LY =
+CALCULATE (
+    [Total Ventas],
+    SAMEPERIODLASTYEAR ( Dim_Fechas[Date] )
+)
+
+// Medida 5 — Crecimiento con VAR y DIVIDE. Cada variable se evalúa una
+// sola vez: sin VAR, [Ventas LY] se calcularía dos veces (en el
+// numerador y en el denominador). DIVIDE devuelve BLANK cuando no hay
+// año anterior, en vez de un error de división por cero.
+// Formato: Porcentaje, 1 decimal.
+% Crecimiento Anual =
+VAR VentasActual = [Total Ventas]
+VAR VentasAnterior = [Ventas LY]
+RETURN
+    DIVIDE (
+        VentasActual - VentasAnterior,
+        VentasAnterior
+    )
